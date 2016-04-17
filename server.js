@@ -20,8 +20,9 @@ app.use(cookieSession({
 }));
 app.locals.pretty = true;
 
-//Basic get request for the entities in the article
-//TODO: call this without default parameters
+/////////////////////////////////////////////
+//Get request for the entities in the article
+/////////////////////////////////////////////
 function getEntities(url, entity_type, callback) {
 	request({
 		uri: "https://api.havenondemand.com/1/api/async/extractentities/v2",
@@ -40,7 +41,7 @@ function getEntities(url, entity_type, callback) {
 	});
 }
 
-
+// General call that should be invoked from all async get/post callbacks
 function awaitAsync(jobID, callback){	
 	console.log("Making request to " + "https://api.havenondemand.com/1/job/status/" + jobID + "?apikey=" + API_KEY);
 	request({
@@ -59,10 +60,10 @@ function awaitAsync(jobID, callback){
 			//TODO: maybe stack overflow
 			awaitAsync(jobID, callback);
 		}
-	});
-	
+	});	
 }
 
+// Extract the entities that have more than 1 match
 function getEntitiesDone(result) {
 	console.log("Get entities done=" + result);
 	//ignore names that only have 1 match
