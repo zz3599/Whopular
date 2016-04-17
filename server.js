@@ -47,7 +47,8 @@ app.route('/getEntities').get(function(req, res, next){
 		for(var i = 0; i < entities.length; i++){
 			console.log("Found entity: " + entities[i].normalized_text + ", picture: " + entities[i].additional_information.image);
 			entityResult[i] = {
-				name: entities[i].normalized_text, 
+				name: entities[i].normalized_text,
+				numMentions: entities[i].matches.length,
 				picture: entities[i].additional_information.image
 			};
 		}
@@ -64,10 +65,49 @@ app.route('/getPopularity').get(function(req, res, next){
 			var numNegative = result.negative.length;
 			var aggregateScore = result.aggregate.score;
 			var aggregateSentiment = result.aggregate.sentiment;
+			var mostPositiveTweet = getMostPositiveTweet(result.negative, result.positive);
+			var mostNegativeTweet = getMostNegativeTweet(result.negative, result.positive);
 			console.log(entityName + " Total negative: " + numNegative + ", positive: " + numPositive + ", aggregateScore: " + aggregateScore + ", aggregateSentiment: " + aggregateSentiment);
-			res.send({'entityName': entityName, 'aggregateScore' : aggregateScore, 'aggregateSentiment' : aggregateSentiment, 'negative' : numNegative, 'postive' : numPositive});
+			res.send({'entityName': entityName, 'aggregateScore' : aggregateScore, 'aggregateSentiment' : aggregateSentiment, 
+				'mostPositive' : mostPositiveTweet, 'mostNegative' : mostNegativeTweet});
 		});
 	});
 });
+
+function getMostPositiveTweet(negatives, positives){
+	var mostPositive;
+	for (var i = 0; i < positives.length; i++){
+		if(!mostPositive || positives[i].score > mostPositive.score){
+			mostPositive = positives[i];
+		}
+	}
+	if (mostPositive) {
+		return mostPositive;
+	}
+	for (var i = 0; i < negatives.length; i++){
+		if(!mostPositive || negatives[i].score > mostPositive.score){
+			mostPositive = negatives[i];
+		}
+	}
+}
+
+function getMostNegativeTweet(negatives, positives){
+	var mostNegative;
+	for (var i = 0; i < negatives.length; i++){
+		if(!mostNegative || negatives[i].score < mostNegative.score){
+			mostNegative = negatives[i];
+		}
+	}
+	if (mostNegative) {
+		return mostNegative;
+	}
+	for (var i = 0; i < positives.length; i++){
+		if(!mostNegative || positives[i].score < mostNegative.score){
+			mostNegative = positives[i];
+		}
+	}
+
+
+}
 
 app.listen(3000);

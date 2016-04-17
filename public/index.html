@@ -73,7 +73,7 @@
                 <div class="row">
                     <div class="col-md-8 col-md-offset-2">
                         <h1 class="brand-heading">Whopular</h1>
-                        <p class="intro-text">Find out WHO's POPULAR.<br>And give them a high-five.</p>
+                        <p class="intro-text">Find out at this moment who's popular</p>
                         <a href="#Search" class="btn btn-circle page-scroll">
                             <i class="fa fa-angle-double-down animated"></i>
                         </a>
@@ -89,7 +89,7 @@
             <div class="col-lg-8 col-lg-offset-2">
 				<div class="container">
 				
-					<div class="col-md-6">
+					<div class="col-md-6" id="spinnerhere">
 						<h2>URL Search</h2>
 						<div id="custom-search-input">
 							<div class="input-group col-md-12">
@@ -180,6 +180,8 @@
             console.log("Searching " + urlToSearch + "...");
             if(urlToSearch){
                 var spinner = new Spinner().spin();
+                var pageTop = document.getElementById('spinnerhere');
+                pageTop.appendChild(spinner.el);
                 $.ajax("/getEntities", {
                     type: "GET",
                     data: {url: urlToSearch},
@@ -187,7 +189,7 @@
                     success: function(data){
                         $('#EntityList').empty();
                         for (var i = 0; i < data.entities.length; i++) {
-                            var div = $('<div>', {text: data.entities[i].name}).appendTo('#EntityList');
+                            var div = $('<div>', {text: data.entities[i].name + "(" + data.entities[i].numMentions + " mentions)"}).appendTo('#EntityList');
                             $('<img>', {src: data.entities[i].picture, style:"width:152px;height:100px;float:right;"}).appendTo(div);
                         }
                         // Now use workers to query for the sentiments of each entity in parallel
@@ -203,7 +205,7 @@
                                 worker.onmessage = function(res){
                                     console.log(res);
                                     var sentimentData = JSON.parse(res.data);
-                                    var div = $('<div>', {text: sentimentData.entityName + ", " + sentimentData.aggregateSentiment + ", " + sentimentData.aggregateScore}).appendTo('#PopularityList');
+                                    var div = $('<div>', {text: sentimentData.entityName + ", " + sentimentData.aggregateSentiment + ", " + sentimentData.aggregateScore + ", (most negative)" + sentimentData.mostNegative.original_text + ", (most positive)" + sentimentData.mostPositive.original_text}).appendTo('#PopularityList');
                                     delete workers[sentimentData.entityName];
                                     // All work is done
                                     if (isEmpty(workers)) {
