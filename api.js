@@ -114,7 +114,7 @@ module.exports = {
 			if (body.token_type === 'bearer') {
 				secrets.TWITTER_ACCESS_TOKEN = body["access_token"];
 			}
-			callback();
+			if(callback)callback();
 		});
 	},
 
@@ -122,17 +122,17 @@ module.exports = {
 	////Gets the tweets for one entity
 	/////////////////////////////////////////////
 	getTweetsForEntity: function (entityName, callback) {
-		if (entityName === null || entityName.length === 0) {
+		if (!entityName) {
 			console.log("Empty entityname");
 			callback("");
 		}
-		if (secrets.TWITTER_ACCESS_TOKEN === null || secrets.TWITTER_ACCESS_TOKEN.length === 0){
+		if (!secrets.TWITTER_ACCESS_TOKEN){
 			console.log("No twitter access token");
 			callback("");
 		}
 		// Put OR's around everything so we can get everything in one search
-		var allEntities = entityName.split(" ").join(" OR ");
-		var queryString = "q=" + encodeURIComponent(allEntities) + "&result_type=recent&count=1000&lang=en";
+		var allEntities = entityName;
+		var queryString = "q=" + encodeURIComponent(allEntities) + "&result_type=recent&count=100&lang=en";
 		console.log("Twitter Search query: " + queryString);
 		request({
 		  	uri: "https://api.twitter.com/1.1/search/tweets.json?" + queryString,

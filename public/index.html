@@ -40,7 +40,6 @@
                     <i class="fa fa-bars"></i>
                 </button>
                 <a class="navbar-brand page-scroll" href="#page-top">
-                    <i class="fa fa-play-circle"></i>  <span class="light">Start</span> Whopular
                 </a>
             </div>
 
@@ -94,22 +93,13 @@
 						<h2>URL Search</h2>
 						<div id="custom-search-input">
 							<div class="input-group col-md-12">
-								<input type="text" class="form-control input-lg" placeholder=".com" />
+								<input type="text" class="form-control input-lg" id="urlToSearch" placeholder=".com" />
 								<span class="input-group-btn">
-									<button class="btn btn-info btn-lg" type="button">
+									<button class="btn btn-info btn-lg" id="searchButton" type="button">
 										<i class="glyphicon glyphicon-search"></i>
 									</button>
 								</span>
 							</div>
-						</div>
-						<div class="form-group">
-							<h2></h2>
-							<h1>OR</h1>
-							<h2>Text Search</h2>
-							<fieldset class="form-group">
-    
-							<textarea class="form-control" id="exampleTextarea" rows="10" placeholder="Enter Text Here"></textarea>
-							</fieldset>
 						</div>
 						<div class="col-lg-12 text-center">
                                 <div id="success"></div>
@@ -131,6 +121,7 @@
             <div class="container">
                 <div class="col-lg-8 col-lg-offset-2">
                     <h2>Name List</h2>
+                    <div id="EntityList"></div>
                     <a href="#contact" class="btn btn-circle page-scroll">
                     <i class="fa fa-angle-double-down animated"></i>
                 </a>
@@ -145,7 +136,7 @@
         <div class="row">
             <div class="col-lg-8 col-lg-offset-2">
                 <h2>Is He/She Popular?</h2>
-                <p>Feel free to email us to provide some feedback on our templates, give us suggestions for new templates and themes, or to just say hello!</p>
+                <div id="PopularityList"></div>
              
     
             </div>
@@ -173,6 +164,60 @@
 
     <!-- Custom Theme JavaScript -->
     <script src="js/grayscale.js"></script>
+    <script src="js/spin.min.js"></script>
+
+    <script>
+        function isEmpty(map) {
+           for(var key in map) {
+              if (map.hasOwnProperty(key)) {
+                 return false;
+              }
+           }
+           return true;
+        }
+        $('#searchButton').click(function(){
+            var urlToSearch = $('#urlToSearch').val().trim();
+            console.log("Searching " + urlToSearch + "...");
+            if(urlToSearch){
+                var spinner = new Spinner().spin();
+                $.ajax("/getEntities", {
+                    type: "GET",
+                    data: {url: urlToSearch},
+                    contentType: "application/json",
+                    success: function(data){
+                        $('#EntityList').empty();
+                        for (var i = 0; i < data.entities.length; i++) {
+                            var div = $('<div>', {text: data.entities[i].name}).appendTo('#EntityList');
+                            $('<img>', {src: data.entities[i].picture, style:"width:152px;height:100px;float:right;"}).appendTo(div);
+                        }
+                        // Now use workers to query for the sentiments of each entity in parallel
+                        var workers = {};
+                        if(window.Worker){
+                            $('#PopularityList').empty();
+                            for(var i = 0; i < data.entities.length; i++) {
+                                var workerKey = data.entities[i].name;
+                                var worker = new Worker('sentimentworker.js');
+                                console.log("creating worker to query " + data.entities[i].name);
+                                workers[workerKey] = worker;
+                                worker.postMessage(workerKey);
+                                worker.onmessage = function(res){
+                                    console.log(res);
+                                    var sentimentData = JSON.parse(res.data);
+                                    var div = $('<div>', {text: sentimentData.entityName + ", " + sentimentData.aggregateSentiment + ", " + sentimentData.aggregateScore}).appendTo('#PopularityList');
+                                    delete workers[sentimentData.entityName];
+                                    // All work is done
+                                    if (isEmpty(workers)) {
+                                        console.log('we done...');
+                                        spinner.stop();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        })
+    </script>
 
 </body>
 
