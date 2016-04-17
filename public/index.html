@@ -73,7 +73,7 @@
                 <div class="row">
                     <div class="col-md-8 col-md-offset-2">
                         <h1 class="brand-heading">Whopular</h1>
-                        <p class="intro-text">Find out at this moment who's popular</p>
+                        <p class="intro-text">Analyze opinion of the people in any news</p>
                         <a href="#Search" class="btn btn-circle page-scroll">
                             <i class="fa fa-angle-double-down animated"></i>
                         </a>
@@ -147,7 +147,6 @@
     <!-- Footer -->
     <footer>
         <div class="container text-center">
-            <p>Copyright &copy; Whopular.com 2016</p>
         </div>
     </footer>
 
@@ -189,8 +188,8 @@
                     success: function(data){
                         $('#EntityList').empty();
                         for (var i = 0; i < data.entities.length; i++) {
-                            var div = $('<div>', {text: data.entities[i].name + "(" + data.entities[i].numMentions + " mentions)"}).appendTo('#EntityList');
-                            $('<img>', {src: data.entities[i].picture, style:"width:152px;height:100px;float:right;"}).appendTo(div);
+                            var div = $('<div>').append($('<p align="left">').html(data.entities[i].name + "(" + data.entities[i].numMentions + " mentions)")).appendTo('#EntityList');
+                            $('<img>', {src: data.entities[i].picture, style:"width:152px;height:100px;align:right;"}).appendTo(div);
                         }
                         // Now use workers to query for the sentiments of each entity in parallel
                         var workers = {};
